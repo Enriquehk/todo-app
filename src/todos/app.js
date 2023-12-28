@@ -1,11 +1,14 @@
-import todoStore from "../store/todo.store";
+import todoStore, { Filters } from "../store/todo.store";
 import html from "./app.html?raw";
-import { renderTodos } from "./use-cases";
+import { renderPending, renderTodos } from "./use-cases";
 
 
 const ElementIDs = {
-	TodoList: '.todo-list',
+	ClearCompleted: '.clear-completed',
 	NewInputTodo: '#new-todo-input',
+	PendingCountLabel: '#pending-count',
+	TodoList: '.todo-list',
+	TodoFilters: '.filtro',
 }
 
 /**
@@ -18,6 +21,11 @@ export const App = ( elementId ) => {
 	const displayTodos = () => {
 		const todos = todoStore.getTodos( todoStore.getCurrentFilter() );
 		renderTodos( ElementIDs.TodoList, todos );
+		updatePendingCount();
+	}
+
+	const updatePendingCount = () => {
+		renderPending(ElementIDs.PendingCountLabel);
 	}
 
 	// Cuando la función App() se llama
@@ -28,9 +36,13 @@ export const App = ( elementId ) => {
 		displayTodos();
 	})();
 
+	
+
 	// Referencias HTML
+	const clearCompletedButton = document.querySelector( ElementIDs.ClearCompleted );
 	const newDescriptionTodo = document.querySelector( ElementIDs.NewInputTodo );
 	const todoListUL = document.querySelector( ElementIDs.TodoList );
+	const filtersLIs = document.querySelectorAll( ElementIDs.TodoFilters );
 
 	// Listeners
 	newDescriptionTodo.addEventListener( 'keyup', ( event ) => {
@@ -57,6 +69,38 @@ export const App = ( elementId ) => {
 		todoStore.deleteTodo( element.getAttribute('data-id') );
 		displayTodos();
 	});
+
+	clearCompletedButton.addEventListener( 'click', () => {
+		todoStore.deleteCompleted();
+		displayTodos();
+	});
+
+	filtersLIs.forEach( element => {
+
+		element.addEventListener( 'click', ( element) => {
+			filtersLIs.forEach( el => el.classList.remove('selected') );
+			element.target.classList.add('selected');
+			switch ( element.target.text ) {
+				case 'Todos':
+					todoStore.setFilter( Filters.All )
+				break;
+				case 'Pendientes':
+					todoStore.setFilter( Filters.Pending )
+				break;
+				case 'Completados':
+					todoStore.setFilter( Filters.Completed )
+				break;
+			}
+
+			displayTodos();
+			
+
+		})
+	})
+
+	
+
+
 
 
 }
